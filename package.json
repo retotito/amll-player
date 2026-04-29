@@ -15,7 +15,9 @@
 	"packageManager": "pnpm@10.33.0",
 	"pnpm": {
 		"onlyBuiltDependencies": [
+			"@applemusic-like-lyrics/fft",
 			"@applemusic-like-lyrics/lyric",
+			"@applemusic-like-lyrics/ttml",
 			"@biomejs/biome",
 			"@parcel/watcher",
 			"@swc/core",

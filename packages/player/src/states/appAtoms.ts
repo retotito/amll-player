@@ -17,7 +17,7 @@ export enum MusicContextMode {
 
 export const displayLanguageAtom = atomWithStorage(
 	"amll-player.displayLanguage",
-	"zh-CN",
+	"en-US",
 );
 
 export const darkModeAtom = atomWithStorage(

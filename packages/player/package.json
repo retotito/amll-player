@@ -51,6 +51,7 @@
 		"jotai": "2.18.1",
 		"jszip": "^3.10.1",
 		"md5": "^2.3.0",
+		"music-metadata": "^11.12.3",
 		"p-limit": "^7.3.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",

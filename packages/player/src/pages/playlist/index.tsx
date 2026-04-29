@@ -20,6 +20,8 @@ import {
 import { path } from "@tauri-apps/api";
 import { open } from "@tauri-apps/plugin-dialog";
 import { platform } from "@tauri-apps/plugin-os";
+import { isTauri } from "../../utils/isTauri";
+import { parseBlob } from "music-metadata";
 import { useLiveQuery } from "dexie-react-hooks";
 import { motion, useMotionTemplate, useScroll } from "framer-motion";
 import { useSetAtom } from "jotai";
@@ -123,6 +125,110 @@ export const Component: FC = () => {
 	const setPosition = useSetAtom(musicPlayingPositionAtom);
 
 	const onAddLocalMusics = useCallback(async () => {
+		if (!isTauri()) {
+			// Browser fallback: use a hidden file input
+			const input = document.createElement("input");
+			input.type = "file";
+			input.multiple = true;
+			input.accept = "audio/mp3,audio/flac,audio/wav,audio/mp4,audio/aac,audio/ogg,.mp3,.flac,.wav,.m4a,.aac,.ogg";
+			input.onchange = async () => {
+				const files = Array.from(input.files ?? []);
+				if (!files.length) return;
+				const id = toast.loading(
+					t(
+						"page.playlist.addLocalMusic.toast.parsingMusicMetadata",
+						"正在解析音乐元数据以添加歌曲 ({current, plural, other {#}} / {total, plural, other {#}})",
+						{ current: 0, total: files.length },
+					),
+				);
+				let current = 0;
+				let success = 0;
+				const currentFailedList: { path: string; error: string }[] = [];
+				const transformed = (
+					await Promise.all(
+						files.map(async (file) => {
+							try {
+								const meta = await parseBlob(file);
+								const cover = meta.common.picture?.[0];
+								const coverBlob = cover
+									? new Blob([cover.data], { type: cover.format })
+									: new Blob();
+								const fakePath = `browser://${file.name}`;
+								const pathMd5 = md5(fakePath);
+								success += 1;
+								return {
+									id: pathMd5,
+									filePath: URL.createObjectURL(file),
+									songName: meta.common.title ?? file.name,
+									songArtists: meta.common.artist ?? "",
+									songAlbum: meta.common.album ?? "",
+									lyricFormat: "none",
+									lyric: "",
+									cover: coverBlob,
+									duration: meta.format.duration ?? 0,
+								} satisfies Song;
+							} catch (err) {
+								console.warn("Failed to parse metadata", file.name, err);
+								currentFailedList.push({
+									path: file.name,
+									error: err instanceof Error ? err.message : String(err),
+								});
+								return null;
+							} finally {
+								current += 1;
+								toast.update(id, {
+									render: t(
+										"page.playlist.addLocalMusic.toast.parsingMusicMetadata",
+										"正在解析音乐元数据以添加歌曲 ({current, plural, other {#}} / {total, plural, other {#}})",
+										{ current, total: files.length },
+									),
+									progress: current / files.length,
+								});
+							}
+						}),
+					)
+				).filter((v) => !!v);
+				await db.songs.bulkPut(transformed);
+				const shouldAddIds = transformed
+					.map((v) => v.id)
+					.filter((v) => !playlist?.songIds.includes(v))
+					.reverse();
+				await db.playlists.update(Number(param.id), (obj) => {
+					obj.songIds.unshift(...shouldAddIds);
+				});
+				toast.done(id);
+				if (currentFailedList.length > 0) {
+					setFailedImports(currentFailedList);
+					if (success > 0) {
+						toast.warn(
+							t(
+								"page.playlist.addLocalMusic.toast.partiallyFailed",
+								"已添加 {succeed, plural, other {#}} 首歌曲，其中 {errored, plural, other {#}} 首歌曲添加失败",
+								{ succeed: success, errored: currentFailedList.length },
+							),
+						);
+					} else {
+						toast.error(
+							t(
+								"page.playlist.addLocalMusic.toast.allFailed",
+								"{errored, plural, other {#}} 首歌曲添加失败",
+								{ errored: currentFailedList.length },
+							),
+						);
+					}
+				} else if (success > 0) {
+					toast.success(
+						t(
+							"page.playlist.addLocalMusic.toast.success",
+							"已全部添加 {count, plural, other {#}} 首歌曲",
+							{ count: success },
+						),
+					);
+				}
+			};
+			input.click();
+			return;
+		}
 		let filters = [
 			{
 				name: t("page.playlist.addLocalMusic.filterName", "音频文件"),

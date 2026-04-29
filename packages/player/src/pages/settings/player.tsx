@@ -78,6 +78,7 @@ import {
 	bottomLyricDisplayModeAtom,
 	DarkMode,
 	darkModeAtom,
+	displayLanguageAtom,
 	enableAlwaysOnTopAtom,
 	enableMediaControlsAtom,
 	enableTaskbarLyricAtom,
@@ -306,6 +307,7 @@ function SliderSettings<T extends number | number[]>({
 const GeneralSettings = () => {
 	const { t, i18n } = useTranslation();
 	const [mode, setMode] = useAtom(darkModeAtom);
+	const [displayLanguage, setDisplayLanguage] = useAtom(displayLanguageAtom);
 	const [os, setOs] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -388,7 +390,7 @@ const GeneralSettings = () => {
 			<SettingEntry
 				label={t("page.settings.general.displayLanguage.label", "显示语言")}
 			>
-				<Select.Root value={i18n.language} onValueChange={i18n.changeLanguage}>
+				<Select.Root value={displayLanguage} onValueChange={setDisplayLanguage}>
 					<Select.Trigger />
 					<Select.Content>
 						{supportedLanguagesMenu.map((item) => (
