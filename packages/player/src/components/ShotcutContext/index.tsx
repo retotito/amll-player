@@ -12,10 +12,12 @@ import {
 import type { Atom } from "jotai";
 import { useAtomValue } from "jotai";
 import { type FC, useEffect } from "react";
+import { isTauri } from "../../utils/isTauri";
 
 const useShotcut = (shotcut: string, callback?: () => void) => {
 	useEffect(() => {
 		if (!callback) return;
+		if (!isTauri()) return;
 		register(shotcut, (evt: ShortcutEvent) => {
 			if (evt.state === "Pressed") {
 				callback();

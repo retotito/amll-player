@@ -6,6 +6,7 @@ import {
 	DarkMode,
 	darkModeAtom,
 } from "../../states/appAtoms";
+import { isTauri } from "../../utils/isTauri";
 
 export const ThemeManager: FC = () => {
 	const setAutoDarkMode = useSetAtom(autoDarkModeAtom);
@@ -26,6 +27,7 @@ export const ThemeManager: FC = () => {
 
 	useEffect(() => {
 		const syncThemeToWindow = async () => {
+			if (!isTauri()) return;
 			try {
 				const appWindow = getCurrentWindow();
 				if (darkMode === DarkMode.Auto) {

@@ -1,6 +1,7 @@
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { mkdir, readDir, readTextFile } from "@tauri-apps/plugin-fs";
 import { atom } from "jotai";
+import { isTauri } from "../utils/isTauri";
 import i18n from "../i18n.ts";
 import {
 	ExtensionLoadResult,
@@ -9,12 +10,14 @@ import {
 } from "./extensionsAtoms.ts";
 
 export const extensionDirAtom = atom(async () => {
+	if (!isTauri()) return null;
 	const appDir = await appDataDir();
 	return await join(appDir, "extensions");
 });
 
 export const extensionMetaAtom = atom(
 	async (get) => {
+		if (!isTauri()) return [];
 		get(reloadExtensionMetaAtom);
 		const extensionDir = await get(extensionDirAtom);
 		await mkdir(extensionDir, { recursive: true });

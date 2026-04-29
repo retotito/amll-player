@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { type EventCallback, listen } from "@tauri-apps/api/event";
 import chalk from "chalk";
 import { uid } from "uid";
+import { isTauri } from "./isTauri";
 
 export interface AudioThreadEventMessage<T> {
 	callbackId: string;
@@ -140,6 +141,7 @@ const eventListeners = new Set<
 let isInitialized = false;
 
 export async function initAudioThread() {
+	if (!isTauri()) return;
 	if (isInitialized) {
 		return;
 	}
@@ -210,6 +212,7 @@ export async function emitAudioThread<T extends keyof AudioThreadMessageMap>(
 		? []
 		: [data: AudioThreadMessageMap[T]]
 ): Promise<void> {
+	if (!isTauri()) return;
 	const id = uid(32) + Date.now();
 
 	const payloadData = args[0]

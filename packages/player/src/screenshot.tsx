@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { isTauri } from "./utils/isTauri";
 import { Provider } from "jotai";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
@@ -27,41 +28,44 @@ const ErrorRender = (props: FallbackProps) => {
 	);
 };
 
-addEventListener("on-system-titlebar-click-close", async () => {
-	const win = getCurrentWindow();
-	await win.close();
-});
 
-addEventListener("on-system-titlebar-click-resize", async () => {
+if (isTauri()) {
+	addEventListener("on-system-titlebar-click-close", async () => {
+		const win = getCurrentWindow();
+		await win.close();
+	});
+
+	addEventListener("on-system-titlebar-click-resize", async () => {
+		const win = getCurrentWindow();
+		if (await win.isMaximizable()) {
+			if (await win.isMaximized()) {
+				await win.unmaximize();
+				setSystemTitlebarResizeAppearance(
+					SystemTitlebarResizeAppearance.Maximize,
+				);
+			} else {
+				await win.maximize();
+				setSystemTitlebarResizeAppearance(SystemTitlebarResizeAppearance.Restore);
+			}
+		}
+	});
+
 	const win = getCurrentWindow();
-	if (await win.isMaximizable()) {
+	async function checkWindow() {
 		if (await win.isMaximized()) {
-			await win.unmaximize();
-			setSystemTitlebarResizeAppearance(
-				SystemTitlebarResizeAppearance.Maximize,
-			);
-		} else {
-			await win.maximize();
 			setSystemTitlebarResizeAppearance(SystemTitlebarResizeAppearance.Restore);
+		} else {
+			setSystemTitlebarResizeAppearance(SystemTitlebarResizeAppearance.Maximize);
 		}
 	}
-});
+	checkWindow();
+	win.onResized(checkWindow);
 
-const win = getCurrentWindow();
-async function checkWindow() {
-	if (await win.isMaximized()) {
-		setSystemTitlebarResizeAppearance(SystemTitlebarResizeAppearance.Restore);
-	} else {
-		setSystemTitlebarResizeAppearance(SystemTitlebarResizeAppearance.Maximize);
-	}
+	addEventListener("on-system-titlebar-click-minimize", async () => {
+		const win = getCurrentWindow();
+		await win.minimize();
+	});
 }
-checkWindow();
-win.onResized(checkWindow);
-
-addEventListener("on-system-titlebar-click-minimize", async () => {
-	const win = getCurrentWindow();
-	await win.minimize();
-});
 
 createRoot(document.getElementById("root") as HTMLElement).render(
 	<ErrorBoundary fallbackRender={ErrorRender}>

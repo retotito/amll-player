@@ -5,6 +5,7 @@ import { useStore } from "jotai";
 import { useEffect, useRef } from "react";
 import semverGt from "semver/functions/gt";
 import { hasBackgroundAtom } from "../states/appAtoms";
+import { isTauri } from "./isTauri";
 
 export const useInitializeWindow = () => {
 	const store = useStore();
@@ -12,6 +13,7 @@ export const useInitializeWindow = () => {
 
 	useEffect(() => {
 		const initializeWindow = async () => {
+			if (!isTauri()) return;
 			if (isInitializedRef.current) return;
 			isInitializedRef.current = true;
 

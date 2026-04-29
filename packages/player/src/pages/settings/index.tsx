@@ -22,6 +22,7 @@ import {
 } from "@radix-ui/themes";
 import { platform } from "@tauri-apps/plugin-os";
 import type { Namespace } from "i18next";
+import { isTauri } from "../../utils/isTauri";
 import { atom, useAtom, useAtomValue } from "jotai";
 import {
 	type FC,
@@ -51,7 +52,7 @@ const usePlatform = () => {
 	const [os, setOs] = useState<string | null>(null);
 
 	useEffect(() => {
-		setOs(platform());
+		if (isTauri()) setOs(platform());
 	}, []);
 
 	return os;

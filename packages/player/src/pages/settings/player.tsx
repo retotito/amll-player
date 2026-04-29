@@ -56,6 +56,7 @@ import {
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { platform } from "@tauri-apps/plugin-os";
+import { isTauri } from "../../utils/isTauri";
 import { atom, useAtom, useAtomValue, type WritableAtom } from "jotai";
 import { loadable } from "jotai/utils";
 import React, {
@@ -308,7 +309,7 @@ const GeneralSettings = () => {
 	const [os, setOs] = useState<string | null>(null);
 
 	useEffect(() => {
-		setOs(platform());
+		if (isTauri()) setOs(platform());
 	}, []);
 
 	const supportedLanguagesMenu = useMemo(() => {

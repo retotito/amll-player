@@ -2,10 +2,12 @@ import { check } from "@tauri-apps/plugin-updater";
 import chalk from "chalk";
 import { atom } from "jotai";
 import { isCheckingUpdateAtom, updateInfoAtom } from "./appAtoms";
+import { isTauri } from "../utils/isTauri";
 
 const LOG_TAG = chalk.bgHex("#FFAA00").hex("#FFFFFF")(" UPDATER ");
 
 export const checkUpdateAtom = atom(null, async (get, set) => {
+	if (!isTauri()) return;
 	set(isCheckingUpdateAtom, true);
 	const oldUpdateInfo = get(updateInfoAtom);
 	if (oldUpdateInfo) {
